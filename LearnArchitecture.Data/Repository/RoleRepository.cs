@@ -1,0 +1,145 @@
+﻿using LearnArchitecture.Core.Entities;
+using LearnArchitecture.Core.Helper.Constants;
+using LearnArchitecture.Data.Context;
+using LearnArchitecture.Data.IRepository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+
+namespace LearnArchitecture.Data.Repository
+{
+    public class RoleRepository:IRoleRepository
+    {
+        private readonly LearnArchitectureDbContext _dbContext;
+        private readonly ILogger<RoleRepository> _logger;
+        public RoleRepository(LearnArchitectureDbContext dbContext, ILogger<RoleRepository> logger)
+        {
+            this._dbContext = dbContext;
+            this._logger = logger;
+        }
+
+        public async Task<List<Role>> GetAllRole(AuthClaim authClaim)
+        {
+            const string methodName = nameof(GetAllRole);
+            try
+            {
+                _logger.LogInformation($"{methodName} called from role Repository");
+
+                var roles = _dbContext.Role
+             .Where(x => x.isActive && !x.isDelete);
+
+
+                var userRole = await GetRoleByAuthClaim(authClaim);
+
+                // Admin Role
+                // If the user is not SuperAdmin, hide SuperAdmin and Admin roles
+                if (userRole == null || !userRole.roleName.Equals(RoleConstants.SuperAdmin, StringComparison.OrdinalIgnoreCase))
+                {
+                    roles = roles.Where(x =>
+                           x.roleName.ToLower() != RoleConstants.SuperAdmin.ToLower() &&
+                           x.roleName.ToLower() != RoleConstants.Admin.ToLower());
+                }
+                return await roles.ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Exception in {methodName} from role Repository");
+                throw;
+            }
+        }
+
+        public async Task<Role> GetRoleByAuthClaim(AuthClaim authClaim)
+        {
+            const string methodName = nameof(GetRoleByAuthClaim);
+            try
+            {
+                _logger.LogInformation($"{methodName} called from role Repository");
+                var userRole = await _dbContext.Role.Where(x => x.roleId == authClaim.roleId && x.isActive && !x.isDelete).FirstOrDefaultAsync();
+                return userRole;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Exception in {methodName} from role Repository");
+                throw;
+            }
+        }
+
+        public async Task<Role> GetRoleById(int roleId)
+        {
+            const string methodName = nameof(GetRoleById);
+            try
+            {
+                _logger.LogInformation($"{methodName} called with roleId: {roleId} from role Repository");
+                var data = await _dbContext.Role
+                       .Where(x => x.roleId == roleId && x.isDelete == false && x.isActive)
+                       .FirstOrDefaultAsync();
+                return data;
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError(ex, $"Exception in {methodName} for roleId: {roleId} from role Repository");
+                throw;
+            }
+            
+
+        }
+        public async Task<bool> CreateRole(Role role, List<RolePermission> lstRolePermission)
+        {
+            const string methodName = nameof(CreateRole);
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                _logger.LogInformation($"{methodName} called from role repository");
+
+                // Add Role
+                await _dbContext.Role.AddAsync(role);
+                await _dbContext.SaveChangesAsync(); // This generates Role.Id
+
+                // Set RoleId and bulk add RolePermissions using LINQ
+                lstRolePermission.ForEach(p => p.RoleId = role.roleId);
+                await _dbContext.RolePermission.AddRangeAsync(lstRolePermission);
+                await _dbContext.SaveChangesAsync();
+
+                // Commit transaction
+                await transaction.CommitAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Rollback transaction
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, $"Exception in {methodName} from role repository");
+                throw;
+            }
+        }
+
+
+        public async Task<bool> UpdateRole(Role role)
+        {
+            const string methodName = nameof(UpdateRole);
+            try
+            {
+                _logger.LogInformation($"{methodName} called from role repository");
+                _dbContext.Role.Update(role);
+                int id =  _dbContext.SaveChanges();
+                return id > 0 ? true : false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Exception in {methodName} from role repository");
+                throw;
+            }
+        }
+        public Task<bool> DeleteRole(int roleId)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
