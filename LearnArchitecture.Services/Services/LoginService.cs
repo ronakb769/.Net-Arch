@@ -101,6 +101,7 @@ namespace LearnArchitecture.Services.Services
                     var userRoles = await _permissionRepository.GetRolesByUserId(user.userId);
                     var permissionList = new List<string>();
 
+                    //Add For loop
                     foreach (var role in userRoles)
                     {
                         var permissions = await _permissionRepository.GetPermissionsByRoleId(role.roleId);
