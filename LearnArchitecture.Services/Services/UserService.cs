@@ -158,7 +158,7 @@ namespace LearnArchitecture.Services.Services
                     if (!validExtensions.Contains(extension))
                         return ResponseBuilder.Fail<bool>("Invalid file format. Allowed formats are: .jpg, .jpeg, .png, .gif");
 
-                    //  delete old profile picture
+                  
                     if (!string.IsNullOrEmpty(existingUser.profileUrl))
                     {
                         var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), existingUser.profileUrl.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString()));
