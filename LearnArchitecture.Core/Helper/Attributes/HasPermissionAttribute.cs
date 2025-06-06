@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using LearnArchitecture.Core.Helper.Attributes;
 using Microsoft.AspNetCore.Http;
+using System.Net;
+using Azure;
 
 namespace LearnArchitecture.Core.Helper.Attributes
 {
@@ -23,18 +25,25 @@ namespace LearnArchitecture.Core.Helper.Attributes
 
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            var userId = int.Parse(context.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value);
-            var authService = (IAuthorizationService)context.HttpContext.RequestServices.GetService(typeof(IAuthorizationService));
-
-            if (!await authService.HasPermissionAsync(userId, _permission))
+            var userIdClaim = context.HttpContext.User.FindFirst("userId");
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var userId))
             {
-                var response = ResponseBuilder.Fail<object>("User is not authorized to perform this action");
-                context.Result = new JsonResult(response)
+                var authService = (IAuthorizationService)context.HttpContext.RequestServices.GetService(typeof(IAuthorizationService));
+
+                if (!await authService.HasPermissionAsync(userId, _permission))
                 {
-                    StatusCode = StatusCodes.Status403Forbidden
-                };
+                    var response = ResponseBuilder.Fail<object>("User is not authorized to perform this action", HttpStatusCode.Unauthorized);
+                    context.Result = new JsonResult(response);
+                    return;
+                }
+            }
+            else
+            {
+                var response =  ResponseBuilder.Fail<object>("User ID claim not found", HttpStatusCode.Unauthorized); // or handle as needed
+                context.Result = new JsonResult(response);
                 return;
             }
+            
 
             await next();
         }

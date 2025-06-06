@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,7 +36,7 @@ namespace LearnArchitecture.Services.Services
                 var dashboardData = await _dashboardRepository.GetUserCount();
 
                 if (dashboardData == null)
-                    return ResponseBuilder.Fail<DashboardResponseModel>("No dashboard data found");
+                    return ResponseBuilder.Fail<DashboardResponseModel>("No dashboard data found",HttpStatusCode.NotFound);
 
                 return ResponseBuilder.Success(dashboardData, "dashboard data retrieved successfully");
 
@@ -43,7 +44,7 @@ namespace LearnArchitecture.Services.Services
             catch (Exception ex) 
             {
                 _logger.LogError(ex, $"Exception in {methodName} from dashboard service");
-                return ResponseBuilder.Fail<DashboardResponseModel>("An error occurred while retrieving dashboard data");
+                return ResponseBuilder.Fail<DashboardResponseModel>("An error occurred while retrieving dashboard data", HttpStatusCode.BadRequest);
             }
         }
     }

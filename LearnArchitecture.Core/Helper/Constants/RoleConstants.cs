@@ -13,5 +13,6 @@ namespace LearnArchitecture.Core.Helper.Constants
         public const string SuperAdmin = "Super Admin";
         public const string User = "User";
         public const string TestUser = "Test User";
+        public const string Developer = "Developer";
     }
 }

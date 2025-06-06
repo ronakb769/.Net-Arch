@@ -1,13 +1,18 @@
 ﻿using LearnArchitecture.Core.Entities;
 using LearnArchitecture.Core.Helper.Constants;
+using LearnArchitecture.Core.Models.ResponseModel;
 using LearnArchitecture.Data.Context;
 using LearnArchitecture.Data.IRepository;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -22,15 +27,39 @@ namespace LearnArchitecture.Data.Repository
             this._dbContext = dbContext;
             this._logger = _logger;
         }
+
+        #region GetAllUsers using Entity Framework
+        //public async Task<List<Users>> GetAllUsers(AuthClaim authClaim)
+        //{
+        //    const string methodName = nameof(GetAllUsers);
+        //    try
+        //    {
+        //        _logger.LogInformation($"{methodName} called from UserRepository");
+        //        return await _dbContext.Users
+        //                    .Where(x => x.isActive && !x.isDelete && x.userId != authClaim.userId)
+        //                    .ToListAsync();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, $"Exception in {methodName}");
+        //        throw;
+        //    }
+        //}
+        #endregion
+
+
+        #region GetAllUsers using Stored Procedure
         public async Task<List<Users>> GetAllUsers(AuthClaim authClaim)
         {
             const string methodName = nameof(GetAllUsers);
             try
             {
                 _logger.LogInformation($"{methodName} called from UserRepository");
-                return await _dbContext.Users
-                            .Where(x => x.isActive && !x.isDelete && x.userId != authClaim.userId)
+
+                SqlParameter userId = new("@userId", authClaim.userId);
+                var result  = await _dbContext.Users.FromSqlRaw("EXEC GetAllUser @userId", userId)
                             .ToListAsync();
+                return result;
             }
             catch (Exception ex)
             {
@@ -38,15 +67,28 @@ namespace LearnArchitecture.Data.Repository
                 throw;
             }
         }
-
-        public async Task<Users> GetUserById(int userId)
+        #endregion
+        public async Task<UserByIdResponseModel> GetUserById(int userId)
         {
             const string methodName = nameof(GetUserById);
             try
             {
                 _logger.LogInformation($"{methodName} called with userId: {userId}");
-                return await _dbContext.Users
-                            .FirstOrDefaultAsync(x => x.userId == userId && x.isActive && !x.isDelete);
+                return await (from u in _dbContext.Users
+                              join urm in _dbContext.UserRoleMapping
+                              on u.userId equals urm.userId
+                              where u.userId == userId && u.isActive && !u.isDelete
+                              select new UserByIdResponseModel
+                              {
+                                  userId = u.userId,
+                                  firstName = u.firstName,
+                                  lastName = u.lastName,
+                                  email = u.email,
+                                  password = u.password,
+                                  phone = u.phone,
+                                  profileUrl = u.profileUrl,
+                                  roleId = urm.roleId
+                              }).FirstOrDefaultAsync();
             }
             catch (Exception ex)
             {
@@ -55,38 +97,78 @@ namespace LearnArchitecture.Data.Repository
             }
         }
 
+        public async Task<Users> GetUserByIdForUpdate(int userId)
+        {
+            const string methodName = nameof(GetUserByIdForUpdate);
+            try
+            {
+                _logger.LogInformation($"{methodName} called with userId: {userId}");
+                return await _dbContext.Users.Where(u => u.userId == userId && !u.isDelete).FirstOrDefaultAsync();
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, $"Exception in {methodName} for userId: {userId}");
+                throw;
+            }
+        }
         public async Task<bool> SaveUserWithRoleAsync(Users userModel, UserRoleMapping userRoleMapping, bool isUpdate)
         {
             const string methodName = nameof(SaveUserWithRoleAsync);
 
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
                 _logger.LogInformation($"{methodName} started with isUpdate: {isUpdate}");
 
-                if (isUpdate)
+                    var result = new ResultModel();
+                    SqlParameter userId = new("@userId", userModel.userId);
+                    SqlParameter firstName = new("@firstName", userModel.firstName);
+                    SqlParameter lastName = new("@lastName", userModel.lastName);
+                    SqlParameter email = new("@email", userModel.email);
+                    SqlParameter password = new("@password", userModel.password);
+                    SqlParameter phone = new("@phone", userModel.phone);
+                    SqlParameter profileUrl = new("@profileUrl", userModel.profileUrl);
+                    SqlParameter roleId = new("@roleId", userRoleMapping.roleId);
+                    SqlParameter isActive = new("@isActive", userModel.isActive);
+                    SqlParameter isDelete = new("@isDelete", userModel.isDelete);
+                    SqlParameter createdOn  = new("@createdOn", userModel.createdOn);
+                    SqlParameter createdBy = new("@createdBy", userModel.createdBy);
+                    SqlParameter updatedOn = new("@updatedOn", userModel.updatedOn);
+                    SqlParameter updatedBy = new("@updatedBy", userModel.updatedBy);
+
+                if (userModel.userId > 0)
                 {
-                    _dbContext.Users.Update(userModel);
-                    _dbContext.UserRoleMapping.Update(userRoleMapping);
+                    result = _dbContext.resultModels
+                                        .FromSqlRaw("EXEC Sp_UpdateUser @userid, @firstName, @lastName, @email, @password, @phone, @profileUrl, @roleId, @isActive, @isDelete, @createdOn, @createdBy, @updatedOn, @updatedBy",
+                                           userId, firstName, lastName, email, password, phone, profileUrl, roleId, isActive, isDelete, createdOn, createdBy, updatedOn, updatedBy)
+                                        .AsEnumerable() // Switch to in-memory operations
+                                        .FirstOrDefault();
+
+
+                }
+
+                else
+                {
+
+
+                    result = _dbContext.resultModels
+                                        .FromSqlRaw("EXEC CreateUser @firstName, @lastName, @email, @password, @phone, @profileUrl, @roleId, @isActive, @isDelete, @createdOn, @createdBy",
+                                            firstName, lastName, email, password, phone, profileUrl, roleId, isActive, isDelete, createdOn, createdBy)
+                                        .AsEnumerable() // Switch to in-memory operations
+                                        .FirstOrDefault();
+                }
+                if (result != null && result.flag)
+                {
+                    return true;
                 }
                 else
                 {
-                    await _dbContext.Users.AddAsync(userModel);
-                    await _dbContext.SaveChangesAsync(); // Save first to get userId
-
-                    userRoleMapping.userId = userModel.userId;
-                    await _dbContext.UserRoleMapping.AddAsync(userRoleMapping);
+                    return false;
                 }
 
-                await _dbContext.SaveChangesAsync();
-                await transaction.CommitAsync();
-
-                return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Exception in {methodName}, rolling back transaction");
-                await transaction.RollbackAsync();
                 throw;
             }
         }
@@ -98,11 +180,47 @@ namespace LearnArchitecture.Data.Repository
             {
                 _logger.LogInformation($"{methodName} called for userId: {userId}");
                 return await _dbContext.UserRoleMapping
-                            .FirstOrDefaultAsync(x => x.userId == userId && x.isActive && !x.isDelete);
+                            .FirstOrDefaultAsync(x => x.userId == userId  && !x.isDelete);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Exception in {methodName} for userId: {userId}");
+                throw;
+            }
+        }
+        public async Task<bool> DeleteUser(Users userModel)
+        {
+            const string methodName = nameof(DeleteUser);
+            try
+            {
+                _logger.LogInformation($"{methodName} called for userId: {userModel.userId}");
+
+                var result = new ResultModel();
+                SqlParameter userId = new("@userId", userModel.userId);
+                SqlParameter isActive = new("@isActive", userModel.isActive);
+                SqlParameter isDelete = new("@isDelete", userModel.isDelete);
+                SqlParameter updatedOn = new("@updatedOn", userModel.updatedOn);
+                SqlParameter updatedBy = new("@updatedBy", userModel.updatedBy);
+
+                result =   _dbContext.resultModels
+                                        .FromSqlRaw("EXEC Sp_DeleteUser @userId,@isActive,@isDelete,@updatedOn,@updatedBy", 
+                                            userId, isActive, isDelete, updatedOn, updatedBy)
+                                        .AsEnumerable() // Switch to in-memory operations
+                                        .FirstOrDefault();
+
+                if (result != null && result.flag)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Exception in {methodName} for userId: {userModel.userId}");
                 throw;
             }
         }

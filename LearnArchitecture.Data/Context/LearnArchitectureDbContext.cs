@@ -1,4 +1,5 @@
 ﻿using LearnArchitecture.Core.Entities;
+using LearnArchitecture.Core.Models.ResponseModel;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -20,5 +21,13 @@ namespace LearnArchitecture.Data.Context
         public DbSet<Permissions> Permissions { get; set; }
         public DbSet<RolePermission> RolePermission { get; set; }
         public DbSet<ErrorLog> ErrorLogs { get; set; }
+        public DbSet<LoginHistory> LoginHistory { get; set; }   
+        public DbSet<RefreshToken> RefreshToken { get; set; }
+        public DbSet<ResultModel> resultModels { get; set;}
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<ResultModel>().HasNoKey(); // ✅ This tells EF Core it's keyless
+        }
     }
 }

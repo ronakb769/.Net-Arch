@@ -11,8 +11,10 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using static LearnArchitecture.Core.Helper.Enums.Enums;
 
 namespace LearnArchitecture.Services.Services
 { 
@@ -37,7 +39,7 @@ namespace LearnArchitecture.Services.Services
                 var roles = await _roleRepository.GetAllRole(authClaim);
 
                 if (roles == null || !roles.Any())
-                    return ResponseBuilder.Fail<List<Role>>("No roles found");
+                    return ResponseBuilder.Fail<List<Role>>("No roles found",HttpStatusCode.NotFound);
 
                 return ResponseBuilder.Success(roles, "Roles retrieved successfully");
             }
@@ -61,7 +63,7 @@ namespace LearnArchitecture.Services.Services
                 var role = await _roleRepository.GetRoleById(roleId);
 
                 if (role == null)
-                    return ResponseBuilder.Fail<Role>("Role not found");
+                    return ResponseBuilder.Fail<Role>("Role not found", HttpStatusCode.NotFound);
 
                 return ResponseBuilder.Success(role, "Role retrieved successfully");
             }
@@ -84,7 +86,7 @@ namespace LearnArchitecture.Services.Services
                 var userRole = await _roleRepository.GetRoleByAuthClaim(authClaim);
                 if (userRole != null && !userRole.roleName.Equals(RoleConstants.SuperAdmin, StringComparison.OrdinalIgnoreCase))
                 {
-                    return ResponseBuilder.Fail<bool>("Not Authorize for create new Role");
+                    return ResponseBuilder.Fail<bool>("Not Authorize for create new Role", HttpStatusCode.Unauthorized);
                 }
                 Role role = new Role()
                 {
@@ -128,7 +130,7 @@ namespace LearnArchitecture.Services.Services
 
                 var existingRole = await _roleRepository.GetRoleById(roleModel.roleId);
                 if (existingRole == null)
-                    return ResponseBuilder.Fail<bool>("Role not found");
+                    return ResponseBuilder.Fail<bool>("Role not found", HttpStatusCode.NotFound);
 
                 // Update necessary fields
                 existingRole.roleName = roleModel.roleName;
@@ -149,6 +151,34 @@ namespace LearnArchitecture.Services.Services
             {
                 _logger.LogError(ex, $"Exception in {methodName}");
                 return ResponseBuilder.Fail<bool>("An error occurred while updating the role");
+            }
+        }
+
+        public async Task<ApiResponse<bool>> DeleteRole (int roleId, AuthClaim authClaim)
+        {
+            const string methodName = nameof(DeleteRole);
+            try
+            {
+                _logger.LogInformation($"{methodName} called with roleId: {roleId}");
+
+
+                var existingRole = await _roleRepository.GetRoleById(roleId);
+                if (existingRole == null)
+                    return ResponseBuilder.Fail<bool>("Role not found");
+
+                existingRole = GenericCommonField.UpdateCommonField(existingRole, EnumOperationType.Delete, authClaim);
+
+
+                bool isDeleted = await _roleRepository.DeleteRole(existingRole);
+
+                return isDeleted
+                    ? ResponseBuilder.Success(true, "Role Deleted successfully")
+                    : ResponseBuilder.Fail<bool>("Failed to Delete user");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Exception in {methodName}");
+                return ResponseBuilder.Fail<bool>("An error occurred while deleting the role");
             }
         }
     }

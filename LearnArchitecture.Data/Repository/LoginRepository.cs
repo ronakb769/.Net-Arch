@@ -84,5 +84,87 @@ namespace LearnArchitecture.Data.Repository
                 throw;
             }
         }
+
+        public async Task<int> SaveLoginHistory(LoginHistory loginHistory)
+        {
+            try
+            {
+                await _dbContext.LoginHistory.AddAsync(loginHistory);
+                await _dbContext.SaveChangesAsync();
+                return loginHistory.loginHistoryId; // Return the ID of the newly inserted record
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<bool> SaveRefreshToken(int userId, string refreshToken, DateTime expiryTime)
+        {
+            var refreshTokendata = new RefreshToken
+            {
+                userId = userId,
+                refreshToken = refreshToken,
+                expiryTime = expiryTime
+            };
+                await _dbContext.RefreshToken.AddAsync(refreshTokendata);
+                int id  = await _dbContext.SaveChangesAsync();
+            return id > 0 ? true : false;   
+        }
+
+        public async Task<bool> UpdateLogoutTimeAsync(int loginHistoryId)
+        {
+            try
+            {
+                var record = await _dbContext.LoginHistory.FindAsync(loginHistoryId);
+                if (record == null)
+                    return false;
+
+                record.logoutTime = DateTime.Now;
+
+                _dbContext.LoginHistory.Update(record);
+                await _dbContext.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<Users> GetUserById(int userId)
+        {
+            try
+            {
+                var data = await _dbContext.Users.Where(x => x.userId == userId && x.isActive && !x.isDelete)
+                                .FirstOrDefaultAsync();
+                return data;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<RefreshToken> GetRefreshToken(string refreshToken)
+        {
+            try
+            {
+                var data = await _dbContext.RefreshToken.Where(x => x.refreshToken == refreshToken)
+                                .FirstOrDefaultAsync(); 
+                return data;
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public async Task<bool> UpdateRefreshToken(RefreshToken tokenEntity)
+        {
+             _dbContext.RefreshToken.Update(tokenEntity);
+            await _dbContext.SaveChangesAsync();
+            return true;
+        }
     }
 }

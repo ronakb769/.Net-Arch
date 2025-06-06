@@ -15,6 +15,6 @@ namespace LearnArchitecture.Data.IRepository
         public Task<Role> GetRoleByAuthClaim(AuthClaim authClaim);
         public Task<bool> CreateRole(Role role, List<RolePermission> lstRolePermissions);
         public Task<bool> UpdateRole(Role role);
-        public Task<bool> DeleteRole(int roleId);
+        public Task<bool> DeleteRole(Role role);
     }
 }
