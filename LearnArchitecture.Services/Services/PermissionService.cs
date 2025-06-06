@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,7 +35,7 @@ namespace LearnArchitecture.Services.Services
                 var permissions = await _permissionRepository.GetAllPermission(authClaim);
 
                 if (permissions == null || !permissions.Any())
-                    return ResponseBuilder.Fail<List<Permissions>>("No permissions found");
+                    return ResponseBuilder.Fail<List<Permissions>>("No permissions found",HttpStatusCode.NotFound);
 
                 return ResponseBuilder.Success(permissions, "Permissions retrieved successfully");
             }

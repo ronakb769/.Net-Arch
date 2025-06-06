@@ -1,7 +1,9 @@
 ﻿using LearnArchitecture.Core.Entities;
 using LearnArchitecture.Core.Helper.Constants;
+using LearnArchitecture.Core.Models.ResponseModel;
 using LearnArchitecture.Data.Context;
 using LearnArchitecture.Data.IRepository;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
@@ -137,9 +139,41 @@ namespace LearnArchitecture.Data.Repository
                 throw;
             }
         }
-        public Task<bool> DeleteRole(int roleId)
+        public async Task<bool> DeleteRole(Role role)
         {
-            throw new NotImplementedException();
+            const string methodName = nameof(DeleteRole);
+            try
+            {
+                _logger.LogInformation($"{methodName} called for userId: {role.roleId}");
+
+                var result = new ResultModel();
+                SqlParameter roleId = new("@roleId", role.roleId);
+                SqlParameter isActive = new("@isActive", role.isActive);
+                SqlParameter isDelete = new("@isDelete", role.isDelete);
+                SqlParameter updatedOn = new("@updatedOn", role.updatedOn);
+                SqlParameter updatedBy = new("@updatedBy", role.updatedBy);
+
+                result = _dbContext.resultModels
+                                        .FromSqlRaw("EXEC Sp_DeleteRole @roleId,@isActive,@isDelete,@updatedOn,@updatedBy",
+                                            roleId, isActive, isDelete, updatedOn, updatedBy)
+                                        .AsEnumerable() // Switch to in-memory operations
+                                        .FirstOrDefault();
+
+                if (result != null && result.flag)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Exception in {methodName} from role repository");
+                throw;
+            }
         }
     }
 }

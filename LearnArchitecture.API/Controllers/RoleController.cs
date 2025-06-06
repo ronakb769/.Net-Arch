@@ -3,6 +3,7 @@ using LearnArchitecture.Core.Helper.Attributes;
 using LearnArchitecture.Core.Helper.Constants;
 using LearnArchitecture.Core.Models.RequestModels;
 using LearnArchitecture.Services.IServices;
+using LearnArchitecture.Services.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -94,6 +95,26 @@ namespace LearnArchitecture.API.Controllers
                 _logger.LogInformation($"{methodName} called from role controller");
                 var JWTAuthClaim = HttpContext.Items["AuthClaim"] as AuthClaim;
                 var data = await _roleService.UpdateRole(roleModel,JWTAuthClaim);
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Exception occurred in {methodName} called from role controller");
+                throw;
+            }
+        }
+
+        [HttpDelete("DeleteRole")]
+        [Authorize]
+        [HasPermission(PermissionConstants.RoleDelete)]
+        public async Task<IActionResult> DeletRole(int roleId)
+        {
+            const string methodName = nameof(DeletRole);
+            try
+            {
+                _logger.LogInformation($"{methodName} called from role controller");
+                var JWTAuthClaim = HttpContext.Items["AuthClaim"] as AuthClaim;
+                var data = await _roleService.DeleteRole(roleId, JWTAuthClaim);
                 return Ok(data);
             }
             catch (Exception ex)

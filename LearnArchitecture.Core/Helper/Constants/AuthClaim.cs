@@ -12,5 +12,6 @@ namespace LearnArchitecture.Core.Helper.Constants
         public string email { get; set; }
         public string userName { get; set; }
         public int roleId { get; set; }
+        public int loginHistoryId { get; set; }
     }
 }

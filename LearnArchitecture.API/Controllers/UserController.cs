@@ -103,7 +103,45 @@ namespace LearnArchitecture.API.Controllers
             }
         }
 
+        [HttpDelete("DeleteUser")]
+        [Authorize]
+        [HasPermission(PermissionConstants.UserDelete)]
+        public async Task<IActionResult> DeleteUser(int userId)
+        {
+            const string methodName = nameof(DeleteUser);
+            try
+            {
+                _logger.LogInformation($"{methodName} called from user controller");
+                var JWTAuthClaim = HttpContext.Items["AuthClaim"] as AuthClaim;
+                var data = await _userService.DeleteUser(userId, JWTAuthClaim);
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Exception occurred in {methodName} called from user controller");
+                throw;
+            }
+        }
 
-       
+        [HttpPut("UpdateUserStatus")]
+        [Authorize]
+        //[HasPermission(PermissionConstants.UserUpdate)]
+        public async Task<IActionResult> UpdateUserStatus(int userId, bool isActive)
+        {
+            const string methodName = nameof(UpdateUserStatus);
+            try
+            {
+                _logger.LogInformation($"{methodName} called from user controller");
+                var JWTAuthClaim = HttpContext.Items["AuthClaim"] as AuthClaim;
+                var data = await _userService.UpdateUserStatus(userId,isActive, JWTAuthClaim);
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Exception occurred in {methodName} called from user controller");
+                throw;
+            }
+        }
+
     }
 }

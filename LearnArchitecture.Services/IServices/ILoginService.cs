@@ -12,8 +12,10 @@ namespace LearnArchitecture.Services.IServices
 {
     public interface ILoginService
     {
-        public Task<ApiResponse<LoginResponseModel>> Login(LoginRequestModel loginModel);
+        public Task<ApiResponse<LoginResponseModel>> Login(LoginRequestModel loginModel,string? clientIp);
         public Task<ApiResponse<bool>> CheckEmail(string emailAddress);
         public Task<ApiResponse<bool>> ResetPassword(LoginRequestModel resetModel);
+        public Task<ApiResponse<bool>> LogoutAsync(int loginHistoryId);
+        public Task<ApiResponse<LoginResponseModel>> RefreshToken(TokenApiModel tokenModel);
     }
 }

@@ -18,18 +18,19 @@ namespace LearnArchitecture.API.Common.Middleware
             var identity = context.User.Identity as ClaimsIdentity;
             if (identity != null && identity.IsAuthenticated)
             {
-                var userIdStr = identity.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                                ?? identity.FindFirst("sub")?.Value;
+                var userIdStr = identity.FindFirst("userId")?.Value;
                 var email = identity.FindFirst("userEmail")?.Value;
                 var userName = identity.FindFirst("userName")?.Value;
                 var roleIdStr = identity.FindFirst("userRoleId")?.Value;
+                var loginHistoryId = identity.FindFirst("loginHistoryId")?.Value;
 
                 var authClaim = new AuthClaim
                 {
                     userId = int.TryParse(userIdStr, out var uid) ? uid : 0,
                     email = email ?? string.Empty,
                     userName = userName ?? string.Empty,
-                    roleId = int.TryParse(roleIdStr, out var rid) ? rid : 0
+                    roleId = int.TryParse(roleIdStr, out var rid) ? rid : 0,
+                    loginHistoryId = int.TryParse(loginHistoryId, out var lhid) ? lhid : 0
                 };
 
                 // Store in HttpContext.Items

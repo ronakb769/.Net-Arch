@@ -3,8 +3,10 @@ using LearnArchitecture.Core.Helper.Constants;
 using LearnArchitecture.Core.Models.RequestModels;
 using LearnArchitecture.Services.IServices;
 using LearnArchitecture.Services.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 using System.Net.Mail;
 
 namespace LearnArchitecture.API.Controllers
@@ -18,7 +20,7 @@ namespace LearnArchitecture.API.Controllers
         public LoginController(ILoginService loginService, ILogger<LoginController> logger)
         {
             this._loginService = loginService;
-            _logger = logger;
+           this._logger = logger;
         }
 
         [HttpPost("Token")]
@@ -26,13 +28,40 @@ namespace LearnArchitecture.API.Controllers
         {
             try
             {
-                var content = await _loginService.Login(loginModel);
+                string clientIp = Request.Headers["Client-IP"];
+                var content = await _loginService.Login(loginModel,clientIp);
                 return Ok(content);
             }
             catch (Exception ex)
             {
                 throw;
             }
+        }
+
+        [HttpPost("RefreshToken")]
+        public async Task<IActionResult> RefreshToken(TokenApiModel tokenApiModel)
+        {
+            if (tokenApiModel == null)
+                return BadRequest("Invalid client request");
+
+            var result = await _loginService.RefreshToken(tokenApiModel);
+            if (result.StatusCode == (int)HttpStatusCode.OK)
+                return Ok(result);
+
+            return Unauthorized(result);
+        }
+
+        [Authorize]
+        [HttpGet("Logout")]
+        public async Task<IActionResult> Logout()
+        {
+            var JWTAuthClaim = HttpContext.Items["AuthClaim"] as AuthClaim;
+            var loginHistoryId =  JWTAuthClaim.loginHistoryId;
+            if (loginHistoryId == 0)
+                return BadRequest("Invalid login history");
+
+            var data = await _loginService.LogoutAsync(loginHistoryId);
+            return Ok(data);
         }
 
         [HttpGet("CheckEmail")]
@@ -42,7 +71,7 @@ namespace LearnArchitecture.API.Controllers
             try
             {
                 _logger.LogInformation($"{methodName} called from user controller");
-                var JWTAuthClaim = HttpContext.Items["AuthClaim"] as AuthClaim;
+               
                 var data = await _loginService.CheckEmail(emailAddress);
                 return Ok(data);
             }
