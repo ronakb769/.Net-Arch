@@ -1,5 +1,6 @@
 ﻿using LearnArchitecture.Core.Entities;
 using LearnArchitecture.Core.Helper.Constants;
+using LearnArchitecture.Core.Models.RequestModels;
 using LearnArchitecture.Services.IServices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -27,7 +28,7 @@ namespace LearnArchitecture.API.Controllers
             try
             {
                 _logger.LogInformation($"{methodName} called app settings controller");
-                var value = await _appSettingsService.GetSettingValue();
+                var value = await _appSettingsService.GetCaptchaStatus();
                 return Ok(value);
             }
             catch (Exception ex) 
@@ -39,13 +40,13 @@ namespace LearnArchitecture.API.Controllers
 
         [HttpGet("GetAllAppSettings")]
 
-        public async Task<IActionResult> GetAllAppSettings()
+        public async Task<IActionResult> GetAllAppSettings(AppSettingPagingRequestModel request)
         {
             const string methodName = nameof(GetAllAppSettings);
             try
             {
                 _logger.LogInformation($"{methodName} called app settings controller");
-                var value = await _appSettingsService.GetSettingValue();
+                var value = await _appSettingsService.GetSettingValue(request);
                 return Ok(value);
             }
             catch (Exception ex)

@@ -81,7 +81,7 @@ namespace LearnArchitecture.Data.Repository
                     query = query.Where(x =>
                         x.userName.ToLower().Contains(lowerSearch) ||
                         x.email.ToLower().Contains(lowerSearch) ||
-                        x.phone.ToLower().Contains(lowerSearch)); 
+                        x.phone.ToLower().Contains(lowerSearch));
                 }
 
                 int totalRecords = query.Count();
@@ -97,7 +97,11 @@ namespace LearnArchitecture.Data.Repository
                         ? query.OrderByDescending(x => x.email)
                         : query.OrderBy(x => x.email),
 
-                    "createddate" => request.SortDirection == "desc"
+                    "phone" => request.SortDirection == "desc"
+                       ? query.OrderByDescending(x => x.phone)
+                       : query.OrderBy(x => x.phone),
+
+                    "createdOn" => request.SortDirection == "desc"
                         ? query.OrderByDescending(x => x.createdOn)
                         : query.OrderBy(x => x.createdOn),
 
