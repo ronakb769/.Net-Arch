@@ -1,5 +1,6 @@
 ﻿using LearnArchitecture.Core.Entities;
 using LearnArchitecture.Core.Helper.Constants;
+using LearnArchitecture.Core.Models.RequestModels;
 using LearnArchitecture.Core.Models.ResponseModel;
 using LearnArchitecture.Data.Context;
 using LearnArchitecture.Data.IRepository;
@@ -49,7 +50,7 @@ namespace LearnArchitecture.Data.Repository
 
 
         #region GetAllUsers using Stored Procedure
-        public async Task<List<Users>> GetAllUsers(AuthClaim authClaim)
+        public async Task<PagingResponseModel<UserResponseModel>> GetAllUsers(UserPagingRequestModel request, AuthClaim authClaim)
         {
             const string methodName = nameof(GetAllUsers);
             try
@@ -57,9 +58,62 @@ namespace LearnArchitecture.Data.Repository
                 _logger.LogInformation($"{methodName} called from UserRepository");
 
                 SqlParameter userId = new("@userId", authClaim.userId);
-                var result  = await _dbContext.Users.FromSqlRaw("EXEC GetAllUser @userId", userId)
-                            .ToListAsync();
-                return result;
+                var users = await _dbContext.Users
+                    .FromSqlRaw("EXEC GetAllUser @userId", userId)
+                    .ToListAsync();
+
+                // Projection to response model (for better control and DTO separation)
+                var query = users.Select(u => new UserResponseModel
+                {
+                    userId = u.userId,
+                    userName = u.firstName + " " + u.lastName,
+                    email = u.email,
+                    phone = u.phone,
+                    createdOn = u.createdOn,
+                    isActive = u.isActive,
+                    isDelete = u.isDelete,
+                }).AsQueryable();
+
+                // Filtering
+                if (!string.IsNullOrWhiteSpace(request.searchText))
+                {
+                    string lowerSearch = request.searchText.ToLower();
+                    query = query.Where(x =>
+                        x.userName.ToLower().Contains(lowerSearch) ||
+                        x.email.ToLower().Contains(lowerSearch)); 
+                }
+
+                int totalRecords = query.Count();
+
+                // Sorting
+                query = request.SortColumn?.ToLower() switch
+                {
+                    "username" => request.SortDirection == "desc"
+                        ? query.OrderByDescending(x => x.userName)
+                        : query.OrderBy(x => x.userName),
+
+                    "email" => request.SortDirection == "desc"
+                        ? query.OrderByDescending(x => x.email)
+                        : query.OrderBy(x => x.email),
+
+                    "createddate" => request.SortDirection == "desc"
+                        ? query.OrderByDescending(x => x.createdOn)
+                        : query.OrderBy(x => x.createdOn),
+
+                    _ => query.OrderByDescending(x => x.createdOn)
+                };
+
+                // Paging
+                var data = query
+                    .Skip((request.PageNumber - 1) * request.PageSize)
+                    .Take(request.PageSize)
+                    .ToList();
+
+                return new PagingResponseModel<UserResponseModel>
+                {
+                    Data = data,
+                    TotalRecords = totalRecords
+                };
             }
             catch (Exception ex)
             {
@@ -67,6 +121,7 @@ namespace LearnArchitecture.Data.Repository
                 throw;
             }
         }
+
         #endregion
         public async Task<UserByIdResponseModel> GetUserById(int userId)
         {

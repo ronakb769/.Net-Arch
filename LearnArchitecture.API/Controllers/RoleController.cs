@@ -25,7 +25,7 @@ namespace LearnArchitecture.API.Controllers
 
         [HttpGet("GetAllRoles")]
         [Authorize]
-        [HasPermission(PermissionConstants.RoleView)]
+        //[HasPermission(PermissionConstants.RoleView)]
         public async Task<IActionResult> GetAllRoles()
         {
             const string methodName  = nameof(GetAllRoles);
@@ -47,7 +47,7 @@ namespace LearnArchitecture.API.Controllers
         
         [HttpGet("GetRoleById")]
         [Authorize]
-        [HasPermission(PermissionConstants.RoleView)]
+        //[HasPermission(PermissionConstants.RoleView)]
         public async Task<IActionResult> GetRoleById(int roleId)
         {
             const string methodName = nameof(GetRoleById);
@@ -65,17 +65,39 @@ namespace LearnArchitecture.API.Controllers
         }
 
 
+        //[HttpPost("CreateRole")]
+        //[Authorize]
+        ////[HasPermission(PermissionConstants.RoleCreate)]
+        //public async Task<IActionResult> CreateRole(CreateRoleRequestModel roleModel)
+        //{
+        //    const string methodName = nameof(CreateRole);
+        //    try
+        //    {
+        //        _logger.LogInformation($"{methodName} called from role controller");
+        //        var JWTAuthClaim = HttpContext.Items["AuthClaim"] as AuthClaim;
+        //        var data = await _roleService.CreateRole(roleModel,JWTAuthClaim);
+        //        return Ok(data);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, $"Exception occurred in {methodName} called from role controller");
+        //        throw;
+        //    }
+        //}
+
+
+
         [HttpPost("CreateRole")]
         [Authorize]
-        [HasPermission(PermissionConstants.RoleCreate)]
-        public async Task<IActionResult> CreateRole(CreateRoleRequestModel roleModel)
+        //[HasPermission(PermissionConstants.RoleCreate)]
+        public async Task<IActionResult> CreateRole(Role roleModel)
         {
             const string methodName = nameof(CreateRole);
             try
             {
                 _logger.LogInformation($"{methodName} called from role controller");
                 var JWTAuthClaim = HttpContext.Items["AuthClaim"] as AuthClaim;
-                var data = await _roleService.CreateRole(roleModel,JWTAuthClaim);
+                var data = await _roleService.CreateRole(roleModel, JWTAuthClaim);
                 return Ok(data);
             }
             catch (Exception ex)
@@ -86,7 +108,7 @@ namespace LearnArchitecture.API.Controllers
         }
         [HttpPost("UpdateRole")]
         [Authorize]
-        [HasPermission(PermissionConstants.RoleUpdate)]
+       // [HasPermission(PermissionConstants.RoleUpdate)]
         public async Task<IActionResult> UpdateRole(Role roleModel)
         {
             const string methodName = nameof(UpdateRole);
@@ -106,7 +128,7 @@ namespace LearnArchitecture.API.Controllers
 
         [HttpDelete("DeleteRole")]
         [Authorize]
-        [HasPermission(PermissionConstants.RoleDelete)]
+        //[HasPermission(PermissionConstants.RoleDelete)]
         public async Task<IActionResult> DeletRole(int roleId)
         {
             const string methodName = nameof(DeletRole);

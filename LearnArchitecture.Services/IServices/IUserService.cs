@@ -13,7 +13,7 @@ namespace LearnArchitecture.Services.IServices
 {
     public interface IUserService
     {
-        public Task<ApiResponse<List<Users>>> GetAllUsers(AuthClaim authClaim);
+        public Task<ApiResponse<PagingResponseModel<UserResponseModel>>> GetAllUsers(UserPagingRequestModel request, AuthClaim authClaim);
         public Task<ApiResponse<UserByIdResponseModel>> GetUserById(int userId);
         public Task<ApiResponse<bool>> CreateUser(CreateUserRoleRequestModel userModel, AuthClaim authClaim);
         public Task<ApiResponse<bool>> UpdateUser(CreateUserRoleRequestModel userModel, AuthClaim authClaim);

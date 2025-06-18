@@ -23,17 +23,17 @@ namespace LearnArchitecture.API.Controllers
             this._logger = logger;
         }
 
-        [HttpGet("GetAllUser")]
+        [HttpPost("GetAllUser")]
         [Authorize]
-        [HasPermission(PermissionConstants.UserView)]
-        public async Task<IActionResult> GetAllUser()
+        //[HasPermission(PermissionConstants.UserView)]
+        public async Task<IActionResult> GetAllUser(UserPagingRequestModel request)
         {
             const string methodName = nameof(GetAllUser);
             try
             {
                 _logger.LogInformation($"{methodName} called user controller");
                 var JWTAuthClaim = HttpContext.Items["AuthClaim"] as AuthClaim;
-                var data = await _userService.GetAllUsers(JWTAuthClaim);
+                var data = await _userService.GetAllUsers(request, JWTAuthClaim);
                 return Ok(data);
             }
             catch (Exception ex) 
@@ -45,7 +45,7 @@ namespace LearnArchitecture.API.Controllers
                                                             
         [HttpGet("GetUserById")]
         [Authorize]
-        [HasPermission(PermissionConstants.UserView)]
+        //[HasPermission(PermissionConstants.UserView)]
         public async Task<IActionResult> GetUserById(int userId)
         {
             const string methodName = nameof(GetUserById);
@@ -65,7 +65,7 @@ namespace LearnArchitecture.API.Controllers
             
         [HttpPost("CreateUser")]
         [Authorize]
-        [HasPermission(PermissionConstants.UserCreate)]
+        //[HasPermission(PermissionConstants.UserCreate)]
         public async Task<IActionResult> CreateUser([FromForm] CreateUserRoleRequestModel userModel)
         {
             const string methodName = nameof(CreateUser);
@@ -85,7 +85,7 @@ namespace LearnArchitecture.API.Controllers
 
         [HttpPost("UpdateUser")]
         [Authorize]
-        [HasPermission(PermissionConstants.UserUpdate)]
+        //[HasPermission(PermissionConstants.UserUpdate)]
         public async Task<IActionResult> UpdateUser([FromForm] CreateUserRoleRequestModel userModel)
         {
             const string methodName = nameof(UpdateUser);
@@ -105,7 +105,7 @@ namespace LearnArchitecture.API.Controllers
 
         [HttpDelete("DeleteUser")]
         [Authorize]
-        [HasPermission(PermissionConstants.UserDelete)]
+        //[HasPermission(PermissionConstants.UserDelete)]
         public async Task<IActionResult> DeleteUser(int userId)
         {
             const string methodName = nameof(DeleteUser);

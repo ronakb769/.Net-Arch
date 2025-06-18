@@ -23,6 +23,7 @@ namespace LearnArchitecture.Data.Context
         public DbSet<ErrorLog> ErrorLogs { get; set; }
         public DbSet<LoginHistory> LoginHistory { get; set; }   
         public DbSet<RefreshToken> RefreshToken { get; set; }
+        public DbSet<AppSettings> AppSettings { get; set; }
         public DbSet<ResultModel> resultModels { get; set;}
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

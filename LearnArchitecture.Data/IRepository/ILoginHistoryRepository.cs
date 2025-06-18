@@ -1,4 +1,5 @@
 ﻿using LearnArchitecture.Core.Entities;
+using LearnArchitecture.Core.Models.RequestModels;
 using LearnArchitecture.Core.Models.ResponseModel;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ namespace LearnArchitecture.Data.IRepository
 {
     public interface ILoginHistoryRepository
     {
-        public Task<List<LoginHistoryResponseModel>> GetLoginHistory();
+        public Task<PagingResponseModel<LoginHistoryResponseModel>> GetLoginHistory(LoginHistoryPagingRequestModel request);
+        public Task<List<string>> GetAllUserNames();
     }
 }
