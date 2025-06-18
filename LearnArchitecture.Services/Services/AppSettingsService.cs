@@ -1,6 +1,8 @@
 ﻿using LearnArchitecture.Core.Entities;
 using LearnArchitecture.Core.Helper;
 using LearnArchitecture.Core.Helper.Constants;
+using LearnArchitecture.Core.Models.RequestModels;
+using LearnArchitecture.Core.Models.ResponseModel;
 using LearnArchitecture.Data.IRepository;
 using LearnArchitecture.Data.Repository;
 using LearnArchitecture.Services.IServices;
@@ -25,14 +27,15 @@ namespace LearnArchitecture.Services.Services
             this._logger = logger;
         }
 
-        public async Task<ApiResponse<List<AppSettings>>> GetSettingValue()
+
+        public async Task<ApiResponse<List<AppSettings>>> GetCaptchaStatus()
         {
-            const string methodName = nameof(GetSettingValue);
+            const string methodName  = nameof(GetCaptchaStatus);
             try
             {
                 _logger.LogInformation($"{methodName} called from app setting service");
-                var appSettings = await _appSettingsRepository.GetSettingValue();
-                if (appSettings == null)
+                var appSettings = await _appSettingsRepository.GetCaptchaStatus();
+                if (appSettings == null && !appSettings.Any())
                     return ResponseBuilder.Fail<List<AppSettings>>("No app settings found", HttpStatusCode.NotFound);
 
                 return ResponseBuilder.Success(appSettings, "app settings retrieved successfully");
@@ -42,6 +45,25 @@ namespace LearnArchitecture.Services.Services
             {
                 _logger.LogError(ex, $"Exception in {methodName} from app setting service");
                 return ResponseBuilder.Fail<List<AppSettings>>("An error occurred while retrieving app settings");
+            }
+        }
+        public async Task<ApiResponse<PagingResponseModel<AppSettings>>> GetSettingValue(AppSettingPagingRequestModel request)
+        {
+            const string methodName = nameof(GetSettingValue);
+            try
+            {
+                _logger.LogInformation($"{methodName} called from app setting service");
+                var appSettings = await _appSettingsRepository.GetSettingValue(request);
+                if (appSettings == null && !appSettings.Data.Any())
+                    return ResponseBuilder.Fail<PagingResponseModel<AppSettings>>("No app settings found", HttpStatusCode.NotFound);
+
+                return ResponseBuilder.Success(appSettings, "app settings retrieved successfully");
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Exception in {methodName} from app setting service");
+                return ResponseBuilder.Fail<PagingResponseModel<AppSettings>>("An error occurred while retrieving app settings");
             }
         }
 
