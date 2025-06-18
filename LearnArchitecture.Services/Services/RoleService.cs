@@ -29,24 +29,24 @@ namespace LearnArchitecture.Services.Services
             this._logger = logger;
         }
 
-        public async Task<ApiResponse<List<Role>>> GetAllRole(AuthClaim authClaim)
+        public async Task<ApiResponse<PagingResponseModel<Role>>> GetAllRole(RolePagingRequestModel rolePagingRequestModel,AuthClaim authClaim)
         {
             const string methodName = nameof(GetAllRole);
             try
             {
                 _logger.LogInformation($"{methodName} called");
 
-                var roles = await _roleRepository.GetAllRole(authClaim);
+                var roles = await _roleRepository.GetAllRole(rolePagingRequestModel, authClaim);
 
-                if (roles == null || !roles.Any())
-                    return ResponseBuilder.Fail<List<Role>>("No roles found",HttpStatusCode.NotFound);
+                if (roles == null || !roles.Data.Any())
+                    return ResponseBuilder.Fail<PagingResponseModel<Role>>("No roles found",HttpStatusCode.NotFound);
 
                 return ResponseBuilder.Success(roles, "Roles retrieved successfully");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Exception in {methodName}");
-                return ResponseBuilder.Fail<List<Role>>("An error occurred while retrieving roles");
+                return ResponseBuilder.Fail<PagingResponseModel<Role>>("An error occurred while retrieving roles");
             }
         }
 

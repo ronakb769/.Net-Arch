@@ -1,5 +1,7 @@
-﻿using LearnArchitecture.Core.Entities;
+﻿using Azure.Core;
+using LearnArchitecture.Core.Entities;
 using LearnArchitecture.Core.Helper.Constants;
+using LearnArchitecture.Core.Models.RequestModels;
 using LearnArchitecture.Core.Models.ResponseModel;
 using LearnArchitecture.Data.Context;
 using LearnArchitecture.Data.IRepository;
@@ -26,29 +28,67 @@ namespace LearnArchitecture.Data.Repository
             this._logger = logger;
         }
 
-        public async Task<List<Role>> GetAllRole(AuthClaim authClaim)
+        public async Task<PagingResponseModel<Role>> GetAllRole(RolePagingRequestModel rolePagingRequestModel,AuthClaim authClaim)
         {
             const string methodName = nameof(GetAllRole);
             try
             {
                 _logger.LogInformation($"{methodName} called from role Repository");
 
-                var roles = _dbContext.Role
-             .Where(x => x.isActive && !x.isDelete);
-
+                var roles = _dbContext.Role.Where(x => x.isActive && !x.isDelete);
 
                 var userRole = await GetRoleByAuthClaim(authClaim);
 
-                // Admin Role
-                // If the user is not SuperAdmin, hide SuperAdmin and Admin roles
-                if (userRole == null || !userRole.roleName.Equals(RoleConstants.SuperAdmin, StringComparison.OrdinalIgnoreCase))
+				// Admin Role
+				#region If the user is not SuperAdmin, hide SuperAdmin and Admin roles
+				if (userRole == null || !userRole.roleName.Equals(RoleConstants.SuperAdmin, StringComparison.OrdinalIgnoreCase))
                 {
                     roles = roles.Where(x =>
                            x.roleName.ToLower() != RoleConstants.SuperAdmin.ToLower() &&
                            x.roleName.ToLower() != RoleConstants.Admin.ToLower());
                 }
-                return await roles.ToListAsync();
-            }
+				#endregion
+				#region Filtering
+				if (!string.IsNullOrWhiteSpace(rolePagingRequestModel.searchText))
+                {
+                    string lowerSearch = rolePagingRequestModel.searchText.ToLower();
+					roles = roles.Where(x =>
+                        x.roleName.ToLower().Contains(lowerSearch) ||
+                        x.description.ToLower().Contains(lowerSearch));
+                }
+				#endregion
+				int totalRecords = roles.Count();
+
+				#region Sorting
+				roles = rolePagingRequestModel.SortColumn?.ToLower() switch
+				{
+					"rolename" => rolePagingRequestModel.SortDirection == "desc"
+						? roles.OrderByDescending(x => x.roleName)
+						: roles.OrderBy(x => x.roleName),
+
+					"description" => rolePagingRequestModel.SortDirection == "desc"
+						? roles.OrderByDescending(x => x.description)
+						: roles.OrderBy(x => x.description),
+
+					"createddate" => rolePagingRequestModel.SortDirection == "desc"
+						? roles.OrderByDescending(x => x.createdOn)
+						: roles.OrderBy(x => x.createdOn),
+
+					_ => roles.OrderByDescending(x => x.createdOn) // Default case
+				};
+				#endregion
+
+				#region Paging
+				var data = roles
+					.Skip((rolePagingRequestModel.PageNumber - 1) * rolePagingRequestModel.PageSize)
+					.Take(rolePagingRequestModel.PageSize).ToList();
+				#endregion
+				return new PagingResponseModel<Role>
+				{
+					Data = data,
+					TotalRecords = totalRecords
+				};
+			}
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Exception in {methodName} from role Repository");

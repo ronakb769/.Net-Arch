@@ -23,10 +23,10 @@ namespace LearnArchitecture.API.Controllers
             this._logger = logger;
         }
 
-        [HttpGet("GetAllRoles")]
+        [HttpPost("GetAllRoles")]
         [Authorize]
         //[HasPermission(PermissionConstants.RoleView)]
-        public async Task<IActionResult> GetAllRoles()
+        public async Task<IActionResult> GetAllRoles(RolePagingRequestModel rolePagingRequestModel)
         {
             const string methodName  = nameof(GetAllRoles);
             try
@@ -34,7 +34,7 @@ namespace LearnArchitecture.API.Controllers
 
                 _logger.LogInformation($"{methodName} called from role controller");
                 var JWTAuthClaim = HttpContext.Items["AuthClaim"] as AuthClaim;
-                var data = await _roleService.GetAllRole(JWTAuthClaim);
+                var data = await _roleService.GetAllRole(rolePagingRequestModel, JWTAuthClaim);
                 return Ok(data);
             }
             catch(Exception ex)
