@@ -16,6 +16,7 @@ namespace LearnArchitecture.API.Common
             services.AddTransient<IPermissionService, PermissionService>();
             services.AddTransient<IDashboardService, DashboardService>();
             services.AddTransient<ILoginHistoryService, LoginHistoryService>();
+            services.AddTransient<IAppSettingsService, AppSettingsService>();
 
             //Repository
             services.AddTransient<ILoginRepository, LoginRepository>();
@@ -25,6 +26,7 @@ namespace LearnArchitecture.API.Common
             services.AddTransient<IErrorLogRepository, ErrorLogRepository>();
             services.AddTransient<IDashboardRepository, DashboardRepository>();
             services.AddTransient<ILoginHistoryRepository, LoginHistoryRepository>();
+            services.AddTransient<IAppSettngsRepository, AppSettingsRepository>();
         }
     }
 }

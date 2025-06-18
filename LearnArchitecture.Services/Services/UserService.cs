@@ -30,23 +30,23 @@ namespace LearnArchitecture.Services.Services
             this._logger = logger;
         }
 
-        public async Task<ApiResponse<List<Users>>> GetAllUsers(AuthClaim authClaim)
+        public async Task<ApiResponse<PagingResponseModel<UserResponseModel>>> GetAllUsers(UserPagingRequestModel request, AuthClaim authClaim)
         {
             const string methodName = nameof(GetAllUsers);
             try
             {
                 _logger.LogInformation($"{methodName} called from user service");
 
-                var users = await _userRepository.GetAllUsers(authClaim);
-                if (users == null || !users.Any())
-                    return ResponseBuilder.Fail<List<Users>>("No users found",HttpStatusCode.NotFound);
+                var users = await _userRepository.GetAllUsers(request,authClaim);
+                if (users == null || !users.Data.Any())
+                    return ResponseBuilder.Fail<PagingResponseModel<UserResponseModel>>("No users found",HttpStatusCode.NotFound);
 
                 return ResponseBuilder.Success(users, "Users retrieved successfully");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Exception in {methodName} from user service");
-                return ResponseBuilder.Fail<List<Users>>("An error occurred while retrieving users");
+                return ResponseBuilder.Fail<PagingResponseModel<UserResponseModel>>("An error occurred while retrieving users");
             }
         }
 

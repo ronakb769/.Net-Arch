@@ -14,7 +14,8 @@ namespace LearnArchitecture.Services.IServices
     {
         public Task<ApiResponse<List<Role>>> GetAllRole(AuthClaim authClaim);
         public Task<ApiResponse<Role>> GetRoleById(int roleId);
-        public Task<ApiResponse<bool>> CreateRole(CreateRoleRequestModel role,AuthClaim authClaim);
+        //public Task<ApiResponse<bool>> CreateRole(CreateRoleRequestModel role,AuthClaim authClaim);
+        public Task<ApiResponse<bool>> CreateRole(Role role, AuthClaim authClaim);
         public Task<ApiResponse<bool>> UpdateRole(Role role, AuthClaim authClaim);
         public Task<ApiResponse<bool>> DeleteRole(int roleId, AuthClaim authClaim);
     }

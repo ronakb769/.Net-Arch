@@ -53,25 +53,20 @@ namespace LearnArchitecture.Services.Services
                 var result = new ApiResponse<LoginResponseModel>();
                 if (loginModel == null || string.IsNullOrEmpty(loginModel.email) || string.IsNullOrEmpty(loginModel.password))
                 {
-                    result.Message = "User Name/ Password is required";
+                     result.Message = "User Name/ Password is required";
+                    return result;
                 }
                 var user = await _loginRepository.Login(loginModel);
-                // Define allowed roles
-                var allowedRoles = new List<string>
-                {
-                    RoleConstants.SuperAdmin,
-                    RoleConstants.Admin,
-                    RoleConstants.Developer
-                };
+                
                 
 
                 if (user != null)
                 {
                     var userRole = await _loginRepository.HasAnyRoleAsync(user.userId);
-                    if (userRole == null || !allowedRoles.Contains(userRole.roleName))
-                    {
-                        return ResponseBuilder.Fail<LoginResponseModel>("User is Not Authorize!",HttpStatusCode.Unauthorized);
-                    }
+                    //if (userRole == null || !allowedRoles.Contains(userRole.roleName))
+                    //{
+                    //    return ResponseBuilder.Fail<LoginResponseModel>("User is Not Authorize!",HttpStatusCode.Unauthorized);
+                    //}
 
                     if (user.isActive == false || user.isDelete == true)
                         return ResponseBuilder.Fail<LoginResponseModel>("Inactive User!");

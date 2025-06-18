@@ -1,5 +1,6 @@
 ﻿using LearnArchitecture.Core.Entities;
 using LearnArchitecture.Core.Helper;
+using LearnArchitecture.Core.Models.RequestModels;
 using LearnArchitecture.Core.Models.ResponseModel;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,8 @@ namespace LearnArchitecture.Services.IServices
 {
     public interface ILoginHistoryService
     {
-        public Task<ApiResponse<List<LoginHistoryResponseModel>>> GetLoginHistory();
+        public Task<ApiResponse<PagingResponseModel<LoginHistoryResponseModel>>> GetLoginHistory(LoginHistoryPagingRequestModel request);
+        public Task<ApiResponse<List<string>>> GetAllUserNames();
+
     }
 }

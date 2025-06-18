@@ -91,36 +91,48 @@ namespace LearnArchitecture.Data.Repository
             
 
         }
-        public async Task<bool> CreateRole(Role role, List<RolePermission> lstRolePermission)
-        {
-            const string methodName = nameof(CreateRole);
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+        //public async Task<bool> CreateRole(Role role, List<RolePermission> lstRolePermission)
+        //{
+        //    const string methodName = nameof(CreateRole);
+        //    using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
-            try
-            {
-                _logger.LogInformation($"{methodName} called from role repository");
+        //    try
+        //    {
+        //        _logger.LogInformation($"{methodName} called from role repository");
 
-                // Add Role
-                await _dbContext.Role.AddAsync(role);
-                await _dbContext.SaveChangesAsync(); // This generates Role.Id
+        //        // Add Role
+        //        await _dbContext.Role.AddAsync(role);
+        //        await _dbContext.SaveChangesAsync(); // This generates Role.Id
 
-                // Set RoleId and bulk add RolePermissions using LINQ
-                lstRolePermission.ForEach(p => p.RoleId = role.roleId);
-                await _dbContext.RolePermission.AddRangeAsync(lstRolePermission);
-                await _dbContext.SaveChangesAsync();
+        //        // Set RoleId and bulk add RolePermissions using LINQ
+        //        lstRolePermission.ForEach(p => p.RoleId = role.roleId);
+        //        await _dbContext.RolePermission.AddRangeAsync(lstRolePermission);
+        //        await _dbContext.SaveChangesAsync();
 
-                // Commit transaction
-                await transaction.CommitAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                // Rollback transaction
-                await transaction.RollbackAsync();
-                _logger.LogError(ex, $"Exception in {methodName} from role repository");
-                throw;
-            }
-        }
+        //        // Commit transaction
+        //        await transaction.CommitAsync();
+        //        return true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Rollback transaction
+        //        await transaction.RollbackAsync();
+        //        _logger.LogError(ex, $"Exception in {methodName} from role repository");
+        //        throw;
+        //    }
+        //}
+
+        //public Task<bool> CreateRole(Role role)
+        //{
+        //    try
+        //    {
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw;
+        //    }
+        //}
 
 
         public async Task<bool> UpdateRole(Role role)
@@ -172,6 +184,24 @@ namespace LearnArchitecture.Data.Repository
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Exception in {methodName} from role repository");
+                throw;
+            }
+        }
+
+        public async Task<bool> CreateRole(Role role)
+        {
+            const string methodName = nameof(CreateRole);
+            try
+            {
+                _logger.LogInformation($"{methodName} called from role repository");
+
+                //        // Add Role
+                await _dbContext.Role.AddAsync(role);
+                int id  =  await _dbContext.SaveChangesAsync();
+                return id>0?true:false;
+            }
+            catch (Exception ex) 
+            {
                 throw;
             }
         }

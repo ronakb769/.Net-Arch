@@ -73,44 +73,73 @@ namespace LearnArchitecture.Services.Services
                 return ResponseBuilder.Fail<Role>("An error occurred while retrieving the role");
             }
         }
-        public async Task<ApiResponse<bool>> CreateRole(CreateRoleRequestModel roleModel, AuthClaim authClaim)
+        //public async Task<ApiResponse<bool>> CreateRole(CreateRoleRequestModel roleModel, AuthClaim authClaim)
+        //{
+        //    const string methodName = nameof(CreateRole);
+        //    try
+        //    {
+        //        _logger.LogInformation($"{methodName} called");
+
+        //        if (roleModel == null)
+        //            return ResponseBuilder.Fail<bool>("Invalid role data");
+
+        //        var userRole = await _roleRepository.GetRoleByAuthClaim(authClaim);
+        //        if (userRole != null && !userRole.roleName.Equals(RoleConstants.SuperAdmin, StringComparison.OrdinalIgnoreCase))
+        //        {
+        //            return ResponseBuilder.Fail<bool>("Not Authorize for create new Role", HttpStatusCode.Unauthorized);
+        //        }
+        //        Role role = new Role()
+        //        {
+        //            roleName = roleModel.roleName,
+        //            description = roleModel.description,
+        //        };
+
+        //        role = GenericCommonField.UpdateCommonField(role, Enums.EnumOperationType.Add, authClaim);
+
+        //        var lstRolePermission = roleModel.pemissionids
+        //          .Select(id =>
+        //          {
+        //              var permission = new RolePermission { PermissionsId = id };
+        //              return GenericCommonField.UpdateCommonField(permission, Enums.EnumOperationType.Add, authClaim);
+        //          })
+        //          .ToList();
+
+
+        //        bool isCreated = await _roleRepository.CreateRole(role, lstRolePermission);
+
+        //        if (!isCreated)
+        //            return ResponseBuilder.Fail<bool>("Failed to create role");
+
+        //        return ResponseBuilder.Success(true, "Role created successfully");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, $"Exception in {methodName}");
+        //        return ResponseBuilder.Fail<bool>("An error occurred while creating the role");
+        //    }
+        //}
+
+
+        public async Task<ApiResponse<bool>> CreateRole(Role role, AuthClaim authClaim)
         {
             const string methodName = nameof(CreateRole);
             try
             {
                 _logger.LogInformation($"{methodName} called");
 
-                if (roleModel == null)
+                if (role == null)
                     return ResponseBuilder.Fail<bool>("Invalid role data");
 
-                var userRole = await _roleRepository.GetRoleByAuthClaim(authClaim);
-                if (userRole != null && !userRole.roleName.Equals(RoleConstants.SuperAdmin, StringComparison.OrdinalIgnoreCase))
-                {
-                    return ResponseBuilder.Fail<bool>("Not Authorize for create new Role", HttpStatusCode.Unauthorized);
-                }
-                Role role = new Role()
-                {
-                    roleName = roleModel.roleName,
-                    description = roleModel.description,
-                };
-
                 role = GenericCommonField.UpdateCommonField(role, Enums.EnumOperationType.Add, authClaim);
-
-                var lstRolePermission = roleModel.pemissionids
-                  .Select(id =>
-                  {
-                      var permission = new RolePermission { PermissionsId = id };
-                      return GenericCommonField.UpdateCommonField(permission, Enums.EnumOperationType.Add, authClaim);
-                  })
-                  .ToList();
-
-
-                bool isCreated = await _roleRepository.CreateRole(role,lstRolePermission);
-
-                if (!isCreated)
+                var isCreated = await _roleRepository.CreateRole(role);
+                if (isCreated)
+                {
+                    return ResponseBuilder.Success(isCreated, "Role created successfully");
+                }
+                else
+                {
                     return ResponseBuilder.Fail<bool>("Failed to create role");
-
-                return ResponseBuilder.Success(true, "Role created successfully");
+                }
             }
             catch (Exception ex)
             {
