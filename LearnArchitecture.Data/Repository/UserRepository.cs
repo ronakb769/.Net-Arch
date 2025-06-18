@@ -80,7 +80,8 @@ namespace LearnArchitecture.Data.Repository
                     string lowerSearch = request.searchText.ToLower();
                     query = query.Where(x =>
                         x.userName.ToLower().Contains(lowerSearch) ||
-                        x.email.ToLower().Contains(lowerSearch)); 
+                        x.email.ToLower().Contains(lowerSearch) ||
+                        x.phone.ToLower().Contains(lowerSearch)); 
                 }
 
                 int totalRecords = query.Count();

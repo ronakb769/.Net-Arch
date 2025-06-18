@@ -63,10 +63,17 @@ namespace LearnArchitecture.Data.Repository
                     query = query.Where(x => x.loginDate <= toDateOnly);
                 }
 
-                int totalRecords = await query.CountAsync();
+                // Global Search
+				if (!string.IsNullOrWhiteSpace(request.searchText))
+				{
+					string lowerSearch = request.searchText.ToLower();
+					query = query.Where(x =>
+						x.userName.ToLower().Contains(lowerSearch));
+				}
+				int totalRecords = await query.CountAsync();
 
-                // Sorting
-                query = request.SortColumn?.ToLower() switch
+				// Sorting
+				query = request.SortColumn?.ToLower() switch
                 {
                     "username" => request.SortDirection == "desc"
                         ? query.OrderByDescending(x => x.userName)

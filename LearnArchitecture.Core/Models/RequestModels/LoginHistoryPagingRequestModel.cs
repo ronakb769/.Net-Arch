@@ -18,5 +18,6 @@ namespace LearnArchitecture.Core.Models.RequestModels
 
         public string? SortColumn { get; set; }
         public string? SortDirection { get; set; } // "asc" / "desc"
+        public string? searchText { get; set; } //global search
     }
 }
