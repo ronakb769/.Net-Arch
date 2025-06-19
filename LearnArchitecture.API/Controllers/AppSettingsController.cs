@@ -38,7 +38,7 @@ namespace LearnArchitecture.API.Controllers
             }
         }
 
-        [HttpGet("GetAllAppSettings")]
+        [HttpPost("GetAllAppSettings")]
 
         public async Task<IActionResult> GetAllAppSettings(AppSettingPagingRequestModel request)
         {
