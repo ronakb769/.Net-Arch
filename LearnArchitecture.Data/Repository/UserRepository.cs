@@ -84,6 +84,23 @@ namespace LearnArchitecture.Data.Repository
                         x.phone.ToLower().Contains(lowerSearch));
                 }
 
+                // Apply isActive filter
+                if (request.isActive == true)
+                {
+                    // Active users → isActive: true, isDelete: false
+                    query = query.Where(x => x.isActive == true && x.isDelete == false);
+                }
+                //else if (request.isActive == false)
+                //{
+                //    // Inactive users → isActive: true, isDelete: true
+                //    query = query.Where(x => x.isActive == false && x.isDelete == false);
+                //}
+                else
+                {
+                    // All users with isActive: true (both deleted and not deleted)
+                    query = query.Where(x => x.isDelete == false);
+                }
+
                 int totalRecords = query.Count();
 
                 // Sorting
