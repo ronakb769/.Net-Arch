@@ -48,6 +48,7 @@ namespace LearnArchitecture.Data.Repository
                            x.roleName.ToLower() != RoleConstants.Admin.ToLower());
                 }
 				#endregion
+
 				#region Filtering
 				if (!string.IsNullOrWhiteSpace(rolePagingRequestModel.searchText))
                 {
@@ -76,18 +77,32 @@ namespace LearnArchitecture.Data.Repository
 
 					_ => roles.OrderByDescending(x => x.createdOn) // Default case
 				};
-				#endregion
+                #endregion
 
-				#region Paging
-				var data = roles
-					.Skip((rolePagingRequestModel.PageNumber - 1) * rolePagingRequestModel.PageSize)
-					.Take(rolePagingRequestModel.PageSize).ToList();
-				#endregion
-				return new PagingResponseModel<Role>
-				{
-					Data = data,
-					TotalRecords = totalRecords
-				};
+
+                #region Paging
+                if (rolePagingRequestModel.PageSize != null && rolePagingRequestModel.PageSize > 0)
+                {
+
+                    var data = roles
+                        .Skip((rolePagingRequestModel.PageNumber - 1) * rolePagingRequestModel.PageSize)
+                        .Take(rolePagingRequestModel.PageSize).ToList();
+                    #endregion
+                    return new PagingResponseModel<Role>
+                    {
+                        Data = data,
+                        TotalRecords = totalRecords
+                    };
+                }
+                else
+                {
+                    
+                    return new PagingResponseModel<Role>
+                    {
+                        Data = roles.ToList(),
+                        TotalRecords = totalRecords
+                    };
+                }
 			}
             catch (Exception ex)
             {
