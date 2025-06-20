@@ -90,11 +90,11 @@ namespace LearnArchitecture.Data.Repository
                     // Active users → isActive: true, isDelete: false
                     query = query.Where(x => x.isActive == true && x.isDelete == false);
                 }
-                //else if (request.isActive == false)
-                //{
-                //    // Inactive users → isActive: true, isDelete: true
-                //    query = query.Where(x => x.isActive == false && x.isDelete == false);
-                //}
+                else if (request.isActive == false)
+                {
+                    // Inactive users → isActive: true, isDelete: true
+                    query = query.Where(x => x.isActive == false && x.isDelete == false);
+                }
                 else
                 {
                     // All users with isActive: true (both deleted and not deleted)
@@ -122,7 +122,11 @@ namespace LearnArchitecture.Data.Repository
                         ? query.OrderByDescending(x => x.createdOn)
                         : query.OrderBy(x => x.createdOn),
 
-                    _ => query.OrderByDescending(x => x.createdOn)
+					"status" => request.SortDirection == "desc"
+		                ? query.OrderByDescending(x => x.isActive)
+		                : query.OrderBy(x => x.isActive),
+
+					_ => query.OrderByDescending(x => x.createdOn)
                 };
 
                 // Paging
@@ -154,7 +158,7 @@ namespace LearnArchitecture.Data.Repository
                 return await (from u in _dbContext.Users
                               join urm in _dbContext.UserRoleMapping
                               on u.userId equals urm.userId
-                              where u.userId == userId && u.isActive && !u.isDelete
+                              where u.userId == userId && !u.isDelete
                               select new UserByIdResponseModel
                               {
                                   userId = u.userId,
